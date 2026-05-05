@@ -53,6 +53,7 @@ workflows:
         - project_location: "$BITRISE_SOURCE_DIR/android"
         - module: app
         - variant: release
+        - arguments: "-Pandroid.injected.build.abi=arm64-v8a"
     - deploy-to-bitrise-io@2: {}
 app:
   envs:
