@@ -1,25 +1,22 @@
 {
   "expo": {
-    "name": "Event-Registration",
-    "slug": "Event-Registration",
+    "name": "Chess App",
+    "slug": "chess-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "eventregistration",
+    "scheme": "chessapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "io.bitrise.hackathon2026"
+      "bundleIdentifier": "io.bitrise.chessapp"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1B5E20",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundImage": "./assets/images/android-icon-background.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "io.bitrise.hackathon2026"
+      "package": "io.bitrise.chessapp"
     },
     "web": {
       "output": "static",
@@ -30,26 +27,16 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#1B5E20",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
           }
         }
-      ],
-      [
-        "./withCustomSigning.js",
-        {
-          "codeSignStyle": "Manual",
-          "teamId": "4UT92WGGSF",
-          "provisioningProfileId": "a51aa59f-892e-4961-a9c5-6c65d1a82a31",
-          "codeSignIdentity": "iPhone Distribution"
-        }
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }
