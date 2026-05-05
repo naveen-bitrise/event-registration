@@ -1,57 +1,190 @@
 ---
-format_version: '13'
+app:
+  envs:
+  - PLATFORM: all
+    opts:
+      is_expand: false
+  - PLATFORM: android
+    opts:
+      is_expand: false
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+format_version: '13'
+pipelines:
+  release:
+    status_report_name: Executing <target_id> for <project_title>
+    triggers:
+      pull_request: []
+    workflows:
+      android-dev-build: {}
+      ios-dev-build: {}
 project_type: react-native
-
 workflows:
-  test:
-    description: |
-      Install dependencies and run TypeScript type-check.
-    steps:
-    - git-clone@8: {}
-    - restore-npm-cache@3: {}
-    - npm@1:
-        title: npm install
-        inputs:
-        - command: install
-    - save-npm-cache@1: {}
-    - npm@1:
-        title: Type-check
-        inputs:
-        - command: test
+  android-dev-build:
+    description: 'Build a dev APK via Expo prebuild and android-build.
 
-  android-build:
+      '
     meta:
       bitrise.io:
-        stack: linux-docker-android-22.04
         machine_type_id: g2.linux.medium
-    description: |
-      Build a release APK via Expo prebuild and android-build.
+        stack: linux-docker-android-22.04
     steps:
     - git-clone@8: {}
     - restore-npm-cache@3: {}
-    - npm@1:
-        title: npm install
+    - npm@3:
         inputs:
         - command: install
+        title: npm install
     - save-npm-cache@1: {}
     - script@1:
-        title: Expo prebuild Android
         inputs:
         - content: |-
             #!/usr/bin/env bash
             set -euo pipefail
             set -x
-            npx expo prebuild --platform android --non-interactive
+            npx expo prebuild
+        title: Expo prebuild
     - android-build@1:
         inputs:
         - project_location: "$BITRISE_SOURCE_DIR/android"
         - module: app
         - variant: release
     - deploy-to-bitrise-io@2: {}
+  ios-dev-build:
+    description: |
+      Installs dependencies.
 
-app:
-  envs:
-  - PLATFORM: android
-    opts:
-      is_expand: false
+      Next steps:
+      - Add tests to your project and configure the workflow to run them.
+      - Check out [Getting started with Expo apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+    meta:
+      bitrise.io:
+        machine_type_id: g2.mac.large
+        stack: osx-xcode-26.4.x
+    status_report_name: Executing <target_id> for <project_title>
+    steps:
+    - git-clone@8: {}
+    - restore-npm-cache@3: {}
+    - npm@3:
+        inputs:
+        - command: install
+        title: npm install
+    - save-npm-cache@1: {}
+    - restore-cocoapods-cache@3: {}
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # make pipelines' return status equal the last command to exit with a non-zero status, or zero if all commands exit successfully
+            set -o pipefail
+            # debug log
+            set -x
+
+            # write your script here
+            npx expo prebuild
+
+            # or run a script from your repository, like:
+            # bash ./path/to/script.sh
+            # not just bash, e.g.:
+            # ruby ./path/to/script.rb
+        title: Expo prebuild
+    - save-cocoapods-cache@1: {}
+    - certificate-and-profile-installer@1: {}
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -e
+            set -o pipefail
+            set -x
+            # For some reason, xcode was choosing the Bitrise wildcard cert unless it is deleted.
+            sudo security delete-certificate -c 'Apple Development: Tooling Bot Bitrise'
+        title: Delete Bitrise Cert
+    - xcode-archive@6:
+        inputs:
+        - project_path: ios/EventRegistration.xcworkspace
+        - scheme: EventRegistration
+        - configuration: Release
+        - verbose_log: 'yes'
+        - distribution_method: enterprise
+        - automatic_code_signing: 'off'
+    - deploy-to-bitrise-io@2: {}
+    triggers:
+      push: []
+  ios-simulator:
+    description: |
+      Installs dependencies.
+
+      Next steps:
+      - Add tests to your project and configure the workflow to run them.
+      - Check out [Getting started with Expo apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+    meta:
+      bitrise.io:
+        machine_type_id: g2.mac.large
+        stack: osx-xcode-26.4.x
+    steps:
+    - git-clone@8: {}
+    - restore-npm-cache@3: {}
+    - npm@3:
+        inputs:
+        - command: install
+        title: npm install
+    - save-npm-cache@1: {}
+    - restore-cocoapods-cache@3: {}
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # make pipelines' return status equal the last command to exit with a non-zero status, or zero if all commands exit successfully
+            set -o pipefail
+            # debug log
+            set -x
+
+            # write your script here
+            npx expo prebuild
+
+            # or run a script from your repository, like:
+            # bash ./path/to/script.sh
+            # not just bash, e.g.:
+            # ruby ./path/to/script.rb
+        title: Expp prebuild
+    - save-cocoapods-cache@1: {}
+    - xcode-build-for-simulator@3:
+        inputs:
+        - configuration: release
+        - xcodebuild_options: |-
+            CODE_SIGN_IDENTITY=""
+            CODE_SIGNING_REQUIRED=NO
+            CODE_SIGNING_ALLOWED=NO
+        - project_path: ios/EventRegistration.xcworkspace
+        - scheme: EventRegistration
+    - deploy-to-bitrise-io@2: {}
+    triggers:
+      pull_request: []
+      push: []
+  test:
+    description: 'Install dependencies, lint, and type-check the project.
+
+      '
+    steps:
+    - git-clone@8: {}
+    - restore-npm-cache@3: {}
+    - npm@3:
+        inputs:
+        - command: install
+        title: npm install
+    - save-npm-cache@1: {}
+    - npm@3:
+        inputs:
+        - command: run lint
+        title: Lint
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -euo pipefail
+            npx tsc --noEmit
+        title: Type-check
