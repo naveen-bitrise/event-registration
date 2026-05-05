@@ -43,6 +43,7 @@ workflows:
             # not just bash, e.g.:
             # ruby ./path/to/script.rb
     - save-cocoapods-cache@1: {}
+    - activate-build-cache-for-xcode@0: {}
     - xcode-build-for-simulator@3:
         inputs:
         - configuration: release
@@ -108,6 +109,7 @@ workflows:
             set -x
             # For some reason, xcode was choosing the Bitrise wildcard cert unless it is deleted.
             sudo security delete-certificate -c 'Apple Development: Tooling Bot Bitrise'
+    - activate-build-cache-for-xcode@0: {}
     - xcode-archive@6:
         inputs:
         - project_path: ios/EventRegistration.xcworkspace
