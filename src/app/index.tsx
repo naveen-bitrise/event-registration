@@ -1,98 +1,114 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect } from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+const { width, height } = Dimensions.get('window');
+const STAR_COUNT = 120;
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+const STAR_WAR_YELLOW = '#FFE81F';
+
+const stars = Array.from({ length: STAR_COUNT }, (_, i) => ({
+  id: i,
+  x: Math.random() * width,
+  y: Math.random() * height,
+  size: Math.random() * 2.5 + 0.5,
+  delay: Math.random() * 3000,
+  duration: Math.random() * 2000 + 1500,
+}));
+
+function Star({ x, y, size, delay, duration }: (typeof stars)[number]) {
+  const opacity = useSharedValue(Math.random() * 0.5 + 0.2);
+
+  useEffect(() => {
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration }),
+          withTiming(0.1, { duration }),
+        ),
+        -1,
+        true,
+      ),
     );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+  }, []);
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <Animated.View
+      style={[
+        styles.star,
+        style,
+        { left: x, top: y, width: size, height: size, borderRadius: size / 2 },
+      ]}
+    />
   );
 }
 
 export default function HomeScreen() {
+  const textOpacity = useSharedValue(0);
+  const textScale = useSharedValue(0.6);
+
+  useEffect(() => {
+    textOpacity.value = withDelay(600, withTiming(1, { duration: 2000 }));
+    textScale.value = withDelay(600, withTiming(1, { duration: 2000 }));
+  }, []);
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+    transform: [{ scale: textScale.value }],
+  }));
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <View style={styles.container}>
+      {stars.map((s) => (
+        <Star key={s.id} {...s} />
+      ))}
+      <Animated.View style={[styles.textContainer, textStyle]}>
+        <Text style={styles.text}>MAY THE 4TH</Text>
+        <Text style={styles.text}>BE WITH YOU</Text>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: '#000000',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  safeArea: {
+  star: {
+    position: 'absolute',
+    backgroundColor: '#ffffff',
+  },
+  textContainer: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    gap: 8,
   },
-  title: {
+  text: {
+    color: STAR_WAR_YELLOW,
+    fontSize: 42,
+    fontWeight: '900',
+    letterSpacing: 4,
     textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    fontFamily: 'serif',
+    textShadowColor: STAR_WAR_YELLOW,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
   },
 });
