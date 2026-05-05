@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import Animated, {
   FadeIn,
+  SlideInLeft,
   SlideInRight,
   SlideOutLeft,
+  SlideOutRight,
   ZoomIn,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -168,7 +170,17 @@ function GridStep({
 
 // ─── Success step ────────────────────────────────────────────────────────────
 
-function SuccessStep({ name, team, role }: { name: string; team: string; role: string }) {
+function SuccessStep({
+  name,
+  team,
+  role,
+  onReset,
+}: {
+  name: string;
+  team: string;
+  role: string;
+  onReset: () => void;
+}) {
   return (
     <Animated.View entering={ZoomIn.delay(150).duration(400)} style={successStyles.wrapper}>
       <ThemedText style={successStyles.emoji}>🎉</ThemedText>
@@ -183,6 +195,11 @@ function SuccessStep({ name, team, role }: { name: string; team: string; role: s
           {team} · {role}
         </ThemedText>
       </ThemedView>
+      <Pressable onPress={onReset} hitSlop={12} style={successStyles.resetButton}>
+        <ThemedText type="small" themeColor="textSecondary">
+          ← Start over
+        </ThemedText>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -204,6 +221,7 @@ const successStyles = StyleSheet.create({
     marginTop: Spacing.two,
     alignSelf: 'stretch',
   },
+  resetButton: { marginTop: Spacing.two },
 });
 
 const stepStyles = StyleSheet.create({
@@ -228,9 +246,24 @@ export default function RegistrationScreen() {
   const theme = useTheme();
 
   const stepIndex = FLOW.indexOf(step);
+  const direction = useRef<'forward' | 'backward'>('forward');
 
   function advance() {
+    direction.current = 'forward';
     if (stepIndex < FLOW.length - 1) setStep(FLOW[stepIndex + 1]);
+  }
+
+  function goBack() {
+    direction.current = 'backward';
+    if (stepIndex > 0) setStep(FLOW[stepIndex - 1]);
+  }
+
+  function reset() {
+    direction.current = 'backward';
+    setStep('name');
+    setName('');
+    setTeam('');
+    setRole('');
   }
 
   const canAdvance =
@@ -249,15 +282,25 @@ export default function RegistrationScreen() {
           <View style={styles.center}>
             <View style={[styles.content, { maxWidth: MaxContentWidth }]}>
               {step !== 'success' && (
-                <StepDots current={stepIndex} total={FLOW.length - 1} />
+                <View style={styles.header}>
+                  {stepIndex > 0 ? (
+                    <Pressable onPress={goBack} hitSlop={12} style={styles.backButton}>
+                      <ThemedText type="small" themeColor="textSecondary">← Back</ThemedText>
+                    </Pressable>
+                  ) : (
+                    <View style={styles.backButton} />
+                  )}
+                  <StepDots current={stepIndex} total={FLOW.length - 1} />
+                  <View style={styles.backButton} />
+                </View>
               )}
 
               <View style={styles.stepOuter}>
                 <Animated.View
                   key={step}
                   style={StyleSheet.absoluteFill}
-                  entering={SlideInRight.duration(260)}
-                  exiting={SlideOutLeft.duration(260)}>
+                  entering={direction.current === 'forward' ? SlideInRight.duration(260) : SlideInLeft.duration(260)}
+                  exiting={direction.current === 'forward' ? SlideOutLeft.duration(260) : SlideOutRight.duration(260)}>
                   {step === 'name' && <NameStep name={name} onChange={setName} />}
                   {step === 'team' && (
                     <GridStep
@@ -276,7 +319,7 @@ export default function RegistrationScreen() {
                     />
                   )}
                   {step === 'success' && (
-                    <SuccessStep name={name} team={team} role={role} />
+                    <SuccessStep name={name} team={team} role={role} onReset={reset} />
                   )}
                 </Animated.View>
               </View>
@@ -315,6 +358,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center' },
   content: { flex: 1, width: '100%', paddingHorizontal: Spacing.three },
   stepOuter: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 56 },
   button: {
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
