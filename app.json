@@ -41,6 +41,15 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "./withCustomSigning.js",
+        {
+          "codeSignStyle": "Manual",
+          "teamId": "4UT92WGGSF",
+          "provisioningProfileId": "a51aa59f-892e-4961-a9c5-6c65d1a82a31",
+          "codeSignIdentity": "iPhone Distribution"
+        }
       ]
     ],
     "experiments": {
