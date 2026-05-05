@@ -1,57 +1,16 @@
 import { router } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withRepeat,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
-const { width, height } = Dimensions.get('window');
-const STAR_COUNT = 120;
+import { StarField } from '@/components/star-field';
+
 const STAR_WAR_YELLOW = '#FFE81F';
-
-const stars = Array.from({ length: STAR_COUNT }, (_, i) => ({
-  id: i,
-  x: Math.random() * width,
-  y: Math.random() * height,
-  size: Math.random() * 2.5 + 0.5,
-  delay: Math.random() * 3000,
-  duration: Math.random() * 2000 + 1500,
-}));
-
-function Star({ x, y, size, delay, duration }: (typeof stars)[number]) {
-  const opacity = useSharedValue(Math.random() * 0.5 + 0.2);
-
-  useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration }),
-          withTiming(0.1, { duration }),
-        ),
-        -1,
-        true,
-      ),
-    );
-  }, []);
-
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View
-      style={[
-        styles.star,
-        style,
-        { left: x, top: y, width: size, height: size, borderRadius: size / 2 },
-      ]}
-    />
-  );
-}
 
 export default function HomeScreen() {
   const textOpacity = useSharedValue(0);
@@ -73,9 +32,7 @@ export default function HomeScreen() {
 
   return (
     <Pressable style={styles.container} onPress={() => router.push('/crawl')}>
-      {stars.map((s) => (
-        <Star key={s.id} {...s} />
-      ))}
+      <StarField />
       <Animated.View style={[styles.textContainer, textStyle]}>
         <Text style={styles.text}>MAY THE 4TH</Text>
         <Text style={styles.text}>BE WITH YOU</Text>
@@ -94,10 +51,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  star: {
-    position: 'absolute',
-    backgroundColor: '#ffffff',
   },
   textContainer: {
     flex: 1,

@@ -1,14 +1,16 @@
 import { Audio } from 'expo-av';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
+
+import { StarField } from '@/components/star-field';
 
 const { width, height } = Dimensions.get('window');
 const STAR_WAR_YELLOW = '#FFE81F';
@@ -37,14 +39,13 @@ her people and restore
 freedom to the galaxy....`;
 
 export default function CrawlScreen() {
-  const translateY = useSharedValue(height);
+  const translateY = useSharedValue(height * 0.6);
   const introOpacity = useSharedValue(0);
   const introScale = useSharedValue(1.4);
   const crawlOpacity = useSharedValue(0);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
-    // Play music
     (async () => {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
@@ -59,14 +60,13 @@ export default function CrawlScreen() {
       await sound.playAsync();
     })();
 
-    // "A long time ago..." fade in then out
     introOpacity.value = withTiming(1, { duration: 1500 });
     introScale.value = withTiming(1, { duration: 1500 });
 
     const timeout = setTimeout(() => {
       introOpacity.value = withTiming(0, { duration: 1500 }, () => {
         crawlOpacity.value = withTiming(1, { duration: 500 });
-        translateY.value = withTiming(-height * 3, {
+        translateY.value = withTiming(-height * 3.5, {
           duration: CRAWL_DURATION_MS,
           easing: Easing.linear,
         });
@@ -94,7 +94,9 @@ export default function CrawlScreen() {
 
   return (
     <Pressable style={styles.screen} onPress={() => router.back()}>
-      {/* Intro text */}
+      <StarField />
+
+      {/* Intro: "A long time ago..." */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.center, introStyle]}>
         <Text style={styles.introText}>A long time ago in a galaxy</Text>
         <Text style={styles.introText}>far, far away....</Text>
@@ -102,14 +104,17 @@ export default function CrawlScreen() {
 
       {/* Crawl */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.crawlWrapper, crawlContainerStyle]}>
-        <View style={styles.perspective}>
+        <Animated.View style={[styles.perspective]}>
           <Animated.View style={[styles.crawl, crawlStyle]}>
             <Text style={styles.episodeLabel}>Episode IV</Text>
             <Text style={styles.episodeTitle}>A NEW HOPE</Text>
             <Text style={styles.crawlBody}>{CRAWL_TEXT}</Text>
           </Animated.View>
-        </View>
+        </Animated.View>
       </Animated.View>
+
+      {/* Top fade — text fades out as it reaches the vanishing point */}
+      <Animated.View style={[styles.topFade, crawlContainerStyle]} pointerEvents="none" />
 
       <Text style={styles.backHint}>tap to go back</Text>
     </Pressable>
@@ -142,11 +147,11 @@ const styles = StyleSheet.create({
     height: height,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    transform: [{ perspective: 250 }, { rotateX: '22deg' }],
+    transform: [{ perspective: 280 }, { rotateX: '18deg' }],
   },
   crawl: {
-    width: width * 0.72,
-    paddingBottom: 40,
+    width: width * 0.75,
+    paddingBottom: 20,
     alignItems: 'center',
     gap: 12,
   },
@@ -176,6 +181,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 30,
     letterSpacing: 0.5,
+  },
+  topFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.35,
+    // Simulated gradient: a series of overlapping semi-transparent black views
+    backgroundColor: 'transparent',
+    // Use a simple black overlay that fades the vanishing point
+    borderBottomColor: 'transparent',
+    borderTopColor: '#000000',
   },
   backHint: {
     position: 'absolute',
