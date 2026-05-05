@@ -46,16 +46,17 @@ export default function CrawlScreen() {
   useEffect(() => {
     // Play music
     (async () => {
-      try {
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/sounds/star-wars-theme.mp3'),
-          { shouldPlay: true, isLooping: false, volume: 1.0 },
-        );
-        soundRef.current = sound;
-      } catch {
-        // No audio file yet — crawl still works
-      }
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: false,
+        staysActiveInBackground: false,
+      });
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/star-wars-theme.mp3'),
+        { isLooping: false, volume: 1.0 },
+      );
+      soundRef.current = sound;
+      await sound.playAsync();
     })();
 
     // "A long time ago..." fade in then out
