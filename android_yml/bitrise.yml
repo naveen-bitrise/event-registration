@@ -48,6 +48,7 @@ workflows:
             set -euo pipefail
             set -x
             npx expo prebuild
+    - activate-build-cache-for-gradle@2: {}
     - android-build@1:
         inputs:
         - project_location: "$BITRISE_SOURCE_DIR/android"
