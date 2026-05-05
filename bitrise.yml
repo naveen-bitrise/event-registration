@@ -103,8 +103,8 @@ workflows:
         title: Delete Bitrise Cert
     - xcode-archive@6:
         inputs:
-        - project_path: ios/EventRegistration.xcworkspace
-        - scheme: EventRegistration
+        - project_path: ios/ChessApp.xcworkspace
+        - scheme: ChessApp
         - configuration: Release
         - verbose_log: 'yes'
         - distribution_method: enterprise
@@ -159,8 +159,8 @@ workflows:
             CODE_SIGN_IDENTITY=""
             CODE_SIGNING_REQUIRED=NO
             CODE_SIGNING_ALLOWED=NO
-        - project_path: ios/EventRegistration.xcworkspace
-        - scheme: EventRegistration
+        - project_path: ios/ChessApp.xcworkspace
+        - scheme: ChessApp
     - deploy-to-bitrise-io@2: {}
     triggers:
       pull_request: []
