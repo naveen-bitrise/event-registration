@@ -25,6 +25,9 @@ workflows:
             #!/usr/bin/env bash
             set -euo pipefail
             npx tsc --noEmit
+    - slack@4:
+        inputs:
+        - webhook_url: $SLACK_WEBHOOK
   android-dev-build:
     meta:
       bitrise.io:
@@ -54,6 +57,9 @@ workflows:
         - module: app
         - variant: release
     - deploy-to-bitrise-io@2: {}
+    - slack@4:
+        inputs:
+        - webhook_url: $SLACK_WEBHOOK
 app:
   envs:
   - PLATFORM: android
